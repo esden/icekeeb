@@ -36,6 +36,7 @@ HEADERS_app=\
 
 SOURCES_app=\
 	fw_app.c \
+	usb_hid.c \
 	usb_desc_app.c \
 	$(NULL)
 
