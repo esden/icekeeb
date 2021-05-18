@@ -29,9 +29,12 @@
 #include "led.h"
 #include "mini-printf.h"
 #include "spi.h"
+#include "utils.h"
+
+#include "usb_hid.h"
+
 #include <no2usb/usb.h>
 #include <no2usb/usb_dfu_rt.h>
-#include "utils.h"
 
 
 extern const struct usb_stack_descriptors app_stack_desc;
@@ -109,6 +112,7 @@ void main()
 	serial_no_init();
 	usb_init(&app_stack_desc);
 	usb_dfu_rt_init();
+	usb_hid_init();
 	usb_connect();
 
 	/* Main loop */
@@ -154,5 +158,6 @@ void main()
 
 		/* USB poll */
 		usb_poll();
+		usb_hid_poll();
 	}
 }
