@@ -74,6 +74,19 @@ usb_dfu_rt_cb_reboot(void)
         boot_dfu();
 }
 
+void
+help(void)
+{
+	puts(
+		"Available commands:\r\n"
+		"  ?: This help\r\n"
+		"  p: Print USB debug information.\r\n"
+		"  b: Boot into DFU mode.\r\n"
+		"  c: Connect USB\r\n"
+		"  d: Disconnect USB\r\n"
+	);
+}
+
 void main()
 {
 	int cmd = 0;
@@ -117,6 +130,9 @@ void main()
 
 			switch (cmd)
 			{
+			case '?':
+				help();
+				break;
 			case 'p':
 				usb_debug_print();
 				break;
@@ -130,6 +146,8 @@ void main()
 				usb_disconnect();
 				break;
 			default:
+				printf("Unknown command '%c'\r\n", cmd);
+				help();
 				break;
 			}
 		}
