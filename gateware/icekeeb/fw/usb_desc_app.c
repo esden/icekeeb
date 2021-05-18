@@ -27,6 +27,8 @@
 #include <no2usb/usb.h>
 
 
+usb_cdc_union_desc_def(1);
+
 static const struct {
 	/* Configuration */
 	struct usb_conf_desc conf;
@@ -36,8 +38,7 @@ static const struct {
 		struct usb_intf_desc intf_ctl;
 		struct usb_cdc_hdr_desc cdc_hdr;
 		struct usb_cdc_acm_desc cdc_acm;
-		struct usb_cdc_union_desc cdc_union;
-		uint8_t cdc_union_slave;
+		struct usb_cdc_union_desc__1 cdc_union;
 		struct usb_ep_desc ep_ctl;
 		struct usb_intf_desc intf_data;
 		struct usb_ep_desc ep_data_out;
@@ -67,30 +68,30 @@ static const struct {
 			.bInterfaceNumber	= 0,
 			.bAlternateSetting	= 0,
 			.bNumEndpoints		= 1,
-			.bInterfaceClass	= 0x02,
-			.bInterfaceSubClass	= 0x02,
+			.bInterfaceClass	= USB_CLS_CDC_CONTROL,
+			.bInterfaceSubClass	= USB_CDC_SCLS_ACM,
 			.bInterfaceProtocol	= 0x00,
 			.iInterface		= 5,
 		},
 		.cdc_hdr = {
 			.bLength		= sizeof(struct usb_cdc_hdr_desc),
 			.bDescriptorType	= USB_CS_DT_INTF,
-			.bDescriptorsubtype	= 0x00,
+			.bDescriptorsubtype	= USB_CDC_DST_HEADER,
 			.bcdCDC			= 0x0110,
 		},
 		.cdc_acm = {
 			.bLength		= sizeof(struct usb_cdc_acm_desc),
 			.bDescriptorType	= USB_CS_DT_INTF,
-			.bDescriptorsubtype	= 0x02,
+			.bDescriptorsubtype	= USB_CDC_DST_ACM,
 			.bmCapabilities		= 0x02,
 		},
 		.cdc_union = {
 			.bLength		= sizeof(struct usb_cdc_union_desc) + 1,
 			.bDescriptorType	= USB_CS_DT_INTF,
-			.bDescriptorsubtype	= 0x06,
+			.bDescriptorsubtype	= USB_CDC_DST_UNION,
 			.bMasterInterface	= 0,
+			.bSlaveInterface	= { 1 },
 		},
-		.cdc_union_slave = 1,
 		.ep_ctl = {
 			.bLength		= sizeof(struct usb_ep_desc),
 			.bDescriptorType	= USB_DT_EP,
@@ -105,7 +106,7 @@ static const struct {
 			.bInterfaceNumber	= 1,
 			.bAlternateSetting	= 0,
 			.bNumEndpoints		= 2,
-			.bInterfaceClass	= 0x0a,
+			.bInterfaceClass	= USB_CLS_CDC_DATA,
 			.bInterfaceSubClass	= 0x00,
 			.bInterfaceProtocol	= 0x00,
 			.iInterface		= 6,
