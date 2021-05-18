@@ -1,0 +1,7 @@
+0000000000000000
+1BitSquared
+!{"bitsy-v0": "icekeeb", "bitsy-v1": "icekeeb", "icebreaker": "icekeeb", "": "icekeeb"}
+Main
+Console (control)
+Console (data)
+DFU runtime
