@@ -24,3 +24,41 @@ set_io -nowarn btn 2
 set_io -nowarn rgb[0] 39
 set_io -nowarn rgb[1] 40
 set_io -nowarn rgb[2] 41
+set_io -nowarn led    25 # P13
+
+# Key matrix
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[0]  46
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[1]  43
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[2]  36
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[3]  34
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[4]  28
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[5]  26
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[6]  10
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[7]  9
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[8]  3
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[9]  4
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[10] 45
+set_io -nowarn -pullup yes -pullup_resistor 10K km_col[11] 48
+set_io -nowarn km_row[0]  27
+set_io -nowarn km_row[1]  23
+set_io -nowarn km_row[2]  12
+set_io -nowarn km_row[3]  11
+
+# Key matrix signal mapping
+# Sig       Pin     Pad
+# COL0      P23     46
+# COL1      P22     43
+# COL2      P21     36
+# COL3      P20     34
+# COL4      P17     28
+# COL5      P16     26
+# COL6      P7      10
+# COL7      P6      9
+# COL8      P5      3
+# COL9      P4      4
+# COL10     P3      45
+# COL11     P2      48
+# ROW0      P15     27
+# ROW1      P14     23
+# ROW2      P9      12
+# ROW4      P8      11

@@ -34,6 +34,11 @@ module top (
 
 	// LED
 	output wire [2:0] rgb,
+	output wire led,
+
+	// Key Matrix
+	input wire [11:0] km_col,
+	output wire [3:0] km_row,
 
 	// Clock
 	input  wire clk_in
@@ -190,6 +195,12 @@ module top (
 	);
 
 	assign wb_rdata[5] = 0;
+
+	// Keyboard scanner [6]
+	// ---
+
+	assign km_row = 4'b1010;
+	assign led = km_col[0];
 
 
 	// Warm Boot
