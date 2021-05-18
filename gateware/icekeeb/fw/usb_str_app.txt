@@ -2,6 +2,7 @@
 1BitSquared
 icekeeb
 Main
+Keyboard
 Console (control)
 Console (data)
 DFU runtime
