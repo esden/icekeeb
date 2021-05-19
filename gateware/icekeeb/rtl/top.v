@@ -45,7 +45,7 @@ module top (
 );
 
 	localparam integer SPRAM_AW = 14; /* 14 => 64k, 15 => 128k */
-	localparam integer WB_N  =  6;
+	localparam integer WB_N  =  7;
 
 	localparam integer WB_DW = 32;
 	localparam integer WB_AW = 16;
@@ -199,9 +199,20 @@ module top (
 	// Keyboard scanner [6]
 	// ---
 
-	assign km_row = 4'b1010;
-	assign led = km_col[0];
+	keyscan keyscan_I (
+		.km_col   (km_col),
+		.km_row   (km_row),
+		.wb_addr  (wb_addr[2:0]),
+		.wb_rdata (wb_rdata[6]),
+		.wb_we    (wb_we),
+		.wb_wdata (wb_wdata),
+		.wb_cyc   (wb_cyc[6]),
+		.wb_ack   (wb_ack[6]),
+		.clk      (clk_24m),
+		.rst      (rst)
+	);
 
+	assign led = km_col[0];
 
 	// Warm Boot
 	// ---------

@@ -25,6 +25,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "config.h"
 #include "console.h"
 #include "led.h"
 #include "mini-printf.h"
@@ -36,6 +37,33 @@
 #include <no2usb/usb.h>
 #include <no2usb/usb_dfu_rt.h>
 
+struct keyscan {
+	uint32_t csr;
+	uint32_t _res[3];
+	uint32_t rows[4];
+} __attribute__((packed,aligned(4)));
+
+static volatile struct keyscan * const keyscan_regs = (void*)(KEYSCAN_BASE);
+
+static char *tobits(uint32_t v)
+{
+        static char buf[13];
+
+        for (int i=0; i<12; i++)
+                buf[i] = (v >> i) & 1 ? '#' : '.';
+        buf[13] = 0;
+
+        return buf;
+}
+
+static void
+keyscan_print_rows(void)
+{
+	for (int i = 0; i<4; i++) {
+		printf("r%d %s\n", i, tobits(keyscan_regs->rows[i]));
+	}
+	puts("\n");
+}
 
 extern const struct usb_stack_descriptors app_stack_desc;
 
@@ -81,18 +109,20 @@ void
 help(void)
 {
 	puts(
-		"Available commands:\r\n"
-		"  ?: This help\r\n"
-		"  p: Print USB debug information.\r\n"
-		"  b: Boot into DFU mode.\r\n"
-		"  c: Connect USB\r\n"
-		"  d: Disconnect USB\r\n"
+		"Available commands:\n"
+		"  ?: This help\n"
+		"  p: Print USB debug information.\n"
+		"  b: Boot into DFU mode.\n"
+		"  c: Connect USB\n"
+		"  d: Disconnect USB\n"
+		"  r: Read row values\n"
 	);
 }
 
 void main()
 {
 	int cmd = 0;
+	bool key_print = false;
 
 	/* Init console IO */
 	console_init();
@@ -149,11 +179,18 @@ void main()
 			case 'd':
 				usb_disconnect();
 				break;
+			case 'r':
+				key_print = !key_print;
+				break;
 			default:
 				printf("Unknown command '%c'\r\n", cmd);
 				help();
 				break;
 			}
+		}
+
+		if(key_print && (usb_get_tick() % 100 == 0)) {
+			keyscan_print_rows();
 		}
 
 		/* USB poll */
