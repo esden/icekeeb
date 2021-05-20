@@ -42,12 +42,24 @@ static struct {
 	bool boot_proto;
 } g_hid;
 
+static struct {
+	uint8_t modifier;
+	uint8_t _res;
+	uint8_t keycodes[6];
+} __attribute__ ((packed)) app_hid_report;
+
+void
+usb_hid_press_key(uint8_t keycode)
+{
+	app_hid_report.keycodes[0] = keycode;
+}
 
 static bool
 _hid_get_report(struct usb_ctrl_req *req, struct usb_xfer *xfer)
 {
-	/* FIXME: Do something ? */
-	xfer->len = 0;
+
+	xfer->cb_data = (void *)&app_hid_report;
+	xfer->len = sizeof(app_hid_report);
 	return true;
 }
 
@@ -196,6 +208,14 @@ usb_hid_poll(void)
 void
 usb_hid_init(void)
 {
+	app_hid_report.modifier = 0x00;
+	app_hid_report._res = 0x00;
+	app_hid_report.keycodes[0] = 0x00;
+	app_hid_report.keycodes[1] = 0x00;
+	app_hid_report.keycodes[2] = 0x00;
+	app_hid_report.keycodes[3] = 0x00;
+	app_hid_report.keycodes[4] = 0x00;
+	app_hid_report.keycodes[5] = 0x00;
 	usb_register_function_driver(&_hid_drv);
 	g_hid.intf = 0xff;
 	g_hid.ep   = 0xff;

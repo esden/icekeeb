@@ -65,6 +65,16 @@ keyscan_print_rows(void)
 	puts("\n");
 }
 
+static void
+key_poll(void)
+{
+	if(keyscan_regs->rows[1] & 0x0001) {
+		usb_hid_press_key(0x04); // A
+	} else {
+		usb_hid_press_key(0x00); // No Key
+	}
+}
+
 extern const struct usb_stack_descriptors app_stack_desc;
 
 static void
@@ -192,6 +202,9 @@ void main()
 		if(key_print && (usb_get_tick() % 100 == 0)) {
 			keyscan_print_rows();
 		}
+
+		/* Key poll */
+		key_poll();
 
 		/* USB poll */
 		usb_poll();
