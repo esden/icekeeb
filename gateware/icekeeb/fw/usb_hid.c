@@ -42,6 +42,7 @@ static struct {
 	bool boot_proto;
 } g_hid;
 
+static bool usb_hid_update_keys = false;
 static struct {
 	uint8_t modifier;
 	uint8_t _res;
@@ -52,6 +53,7 @@ void
 usb_hid_press_key(uint8_t keycode)
 {
 	app_hid_report.keycodes[0] = keycode;
+	usb_hid_update_keys = true;
 }
 
 static bool
@@ -199,15 +201,19 @@ usb_hid_poll(void)
 	if (g_hid.ep == 0xff)
 		return;
 
-//	if ((ep->bd[0].csr & USB_BD_STATE_MSK) != USB_BD_STATE_RDY_DATA) {
-//		usb_data_write(ep->bd[0].ptr, buf, 8);
-//		ep->bd[0].csr = USB_BD_STATE_RDY_DATA | USB_BD_LEN(1);
-//	}
+	if (usb_hid_update_keys) {
+		if ((ep->bd[0].csr & USB_BD_STATE_MSK) != USB_BD_STATE_RDY_DATA) {
+			usb_data_write(ep->bd[0].ptr, &app_hid_report, 8);
+			usb_hid_update_keys = false;
+			ep->bd[0].csr = USB_BD_STATE_RDY_DATA | USB_BD_LEN(8);
+		}
+	}
 }
 
 void
 usb_hid_init(void)
 {
+	usb_hid_update_keys = false;
 	app_hid_report.modifier = 0x00;
 	app_hid_report._res = 0x00;
 	app_hid_report.keycodes[0] = 0x00;

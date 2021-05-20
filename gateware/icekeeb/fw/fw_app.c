@@ -68,10 +68,14 @@ keyscan_print_rows(void)
 static void
 key_poll(void)
 {
-	if(keyscan_regs->rows[1] & 0x0001) {
-		usb_hid_press_key(0x04); // A
-	} else {
-		usb_hid_press_key(0x00); // No Key
+	static uint32_t old = 0;
+	if(keyscan_regs->rows[1] != old) {
+		old = keyscan_regs->rows[1];
+		if((old & 0x0001) != 0) {
+			usb_hid_press_key(0x04); // A
+		} else {
+			usb_hid_press_key(0x00); // No Key
+		}
 	}
 }
 
