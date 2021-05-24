@@ -91,6 +91,15 @@ keyboard_do_key(unsigned int col, unsigned int row, bool down)
     }
 
     switch (keycode) {
+        case QK_MODS...QK_MODS_MAX:
+            if (down) {
+                usb_hid_set_mod(keycode >> 8);
+                usb_hid_press_key(keycode & 0xFF);
+            } else {
+                usb_hid_reset_mod(keycode >> 8);
+                usb_hid_release_key(keycode & 0xFF);
+            }
+            break;
         case QK_TO...QK_TO_MAX:
             // The keycode contains a param at bit 4 to be active at press
             if (down && (keycode & 0x10)) {
