@@ -33,51 +33,10 @@
 #include "utils.h"
 
 #include "usb_hid.h"
+#include "keyboard.h"
 
 #include <no2usb/usb.h>
 #include <no2usb/usb_dfu_rt.h>
-
-struct keyscan {
-	uint32_t csr;
-	uint32_t _res[3];
-	uint32_t rows[4];
-} __attribute__((packed,aligned(4)));
-
-static volatile struct keyscan * const keyscan_regs = (void*)(KEYSCAN_BASE);
-
-static char *tobits(uint32_t v)
-{
-        static char buf[13];
-
-        for (int i=0; i<12; i++)
-                buf[i] = (v >> i) & 1 ? '#' : '.';
-        buf[13] = 0;
-
-        return buf;
-}
-
-static void
-keyscan_print_rows(void)
-{
-	for (int i = 0; i<4; i++) {
-		printf("r%d %s\n", i, tobits(keyscan_regs->rows[i]));
-	}
-	puts("\n");
-}
-
-static void
-key_poll(void)
-{
-	static uint32_t old = 0;
-	if(keyscan_regs->rows[1] != old) {
-		old = keyscan_regs->rows[1];
-		if((old & 0x0001) != 0) {
-			usb_hid_press_key(0x04); // A
-		} else {
-			usb_hid_press_key(0x00); // No Key
-		}
-	}
-}
 
 extern const struct usb_stack_descriptors app_stack_desc;
 
@@ -158,6 +117,7 @@ void main()
 	usb_dfu_rt_init();
 	usb_hid_init();
 	usb_connect();
+	keyboard_init();
 
 	/* Main loop */
 	while (1)
@@ -204,11 +164,11 @@ void main()
 		}
 
 		if(key_print && (usb_get_tick() % 100 == 0)) {
-			keyscan_print_rows();
+			keyboard_print_state();
 		}
 
 		/* Key poll */
-		key_poll();
+		keyboard_poll();
 
 		/* USB poll */
 		usb_poll();

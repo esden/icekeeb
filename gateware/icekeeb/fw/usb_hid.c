@@ -47,7 +47,7 @@ static struct {
 	uint8_t modifier;
 	uint8_t _res;
 	uint8_t keycodes[6];
-} __attribute__ ((packed)) app_hid_report;
+} __attribute__ ((packed,aligned(4))) app_hid_report;
 
 void
 usb_hid_press_key(uint8_t keycode)
@@ -195,7 +195,6 @@ static struct usb_fn_drv _hid_drv = {
 void
 usb_hid_poll(void)
 {
-	uint8_t buf[8] = { 0x00 };
 	volatile struct usb_ep *ep = &usb_ep_regs[g_hid.ep & 0x1f].in;
 
 	if (g_hid.ep == 0xff)

@@ -32,12 +32,14 @@ SOURCES_common=\
 
 HEADERS_app=\
 	usb_str_app.gen.h \
+	keyboard.h \
 	$(NULL)
 
 SOURCES_app=\
 	fw_app.c \
 	usb_hid.c \
 	usb_desc_app.c \
+	keyboard.c \
 	$(NULL)
 
 
