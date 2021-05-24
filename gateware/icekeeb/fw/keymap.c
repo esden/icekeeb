@@ -24,6 +24,7 @@
 /* This file defines the mapping of the keyboard */
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "keymap.h"
 #include "keycode.h"
@@ -64,7 +65,8 @@ const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 static struct {
-    unsigned int active_layer;
+    int prev_layer;
+    int active_layer;
 } keymap_state;
 
 uint16_t
@@ -74,15 +76,38 @@ keymap_get_code(unsigned int col, unsigned int row)
 }
 
 uint16_t
-keymap_get_layer_code(unsigned int layer, unsigned int col, unsigned int row)
+keymap_get_layer_code(int layer, unsigned int col, unsigned int row)
 {
-    return keymaps[layer][row][col];
+    uint16_t code;
+    do {
+        code = keymaps[layer][row][col];
+        layer--;
+    } while ((code == KC_TRNS) && (layer >= 0));
+
+    return code;
 }
 
 void
-keymap_set_layer(unsigned int layer)
+keymap_set_layer(int layer)
 {
     keymap_state.active_layer = layer;
+}
+
+void
+keymap_toggle_layer(int layer)
+{
+    if (keymap_state.active_layer != layer) {
+        keymap_state.prev_layer = keymap_state.active_layer;
+        keymap_state.active_layer = layer;
+    } else {
+        keymap_state.active_layer = keymap_state.prev_layer;
+    }
+}
+
+void
+keymap_print_state(void)
+{
+    printf("prev layer %d current layer %d\n", keymap_state.prev_layer, keymap_state.active_layer);
 }
 
 void

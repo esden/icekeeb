@@ -32,6 +32,7 @@
 
 #include "keycode.h"
 #include "keymap.h"
+#include "quantum_keycodes.h"
 
 struct keyscan {
 	uint32_t csr;
@@ -87,6 +88,31 @@ keyboard_do_key(unsigned int col, unsigned int row, bool down)
         } else {
             usb_hid_reset_mod(MOD_BIT(keycode));
         }
+    }
+
+    switch (keycode) {
+        case QK_TO...QK_TO_MAX:
+            // The keycode contains a param at bit 4 to be active at press
+            if (down && (keycode & 0x10)) {
+                keymap_set_layer(keycode & 0x0F);
+            }
+            if (!down && (keycode & 0x20)) {
+                keymap_set_layer(keycode & 0x0F);
+            }
+            break;
+
+        case QK_MOMENTARY...QK_MOMENTARY_MAX:
+            if (down) {
+                keymap_set_layer(keycode & 0x0F);
+            } else {
+                keymap_set_layer(0);
+            }
+            break;
+
+        case QK_TOGGLE_LAYER...QK_TOGGLE_LAYER_MAX:
+            if (down) {
+                keymap_toggle_layer(keycode & 0x0F);
+            }
     }
 }
 

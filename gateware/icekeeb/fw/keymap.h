@@ -29,6 +29,9 @@
 #define MATRIX_ROWS 4
 #define MATRIX_COLS 12
 
-uint16_t keymap_get_layer_code(unsigned int layer, unsigned int col, unsigned int row);
+uint16_t keymap_get_layer_code(int layer, unsigned int col, unsigned int row);
 uint16_t keymap_get_code(unsigned int col, unsigned int row);
+void keymap_set_layer(int layer);
+void keymap_toggle_layer(int layer);
+void keymap_print_state(void);
 void keymap_init(void);

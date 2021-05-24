@@ -34,6 +34,7 @@
 
 #include "usb_hid.h"
 #include "keyboard.h"
+#include "keymap.h"
 
 #include <no2usb/usb.h>
 #include <no2usb/usb_dfu_rt.h>
@@ -90,6 +91,7 @@ help(void)
 		"  d: Disconnect USB\n"
 		"  r: Read row values\n"
 		"  h: Print hid internal state\n"
+		"  k: Print keymap state\n"
 	);
 }
 
@@ -160,6 +162,9 @@ void main()
 				break;
 			case 'h':
 				hid_print = !hid_print;
+				break;
+			case 'k':
+				keymap_print_state();
 				break;
 			default:
 				printf("Unknown command '%c'\r\n", cmd);
