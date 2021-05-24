@@ -80,6 +80,14 @@ keyboard_do_key(unsigned int col, unsigned int row, bool down)
             usb_hid_release_key(keycode);
         }
     }
+
+    if (IS_MOD(keycode)) {
+        if (down) {
+            usb_hid_set_mod(MOD_BIT(keycode));
+        } else {
+            usb_hid_reset_mod(MOD_BIT(keycode));
+        }
+    }
 }
 
 void

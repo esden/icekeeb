@@ -92,6 +92,20 @@ usb_hid_release_key(uint8_t keycode)
 }
 
 void
+usb_hid_set_mod(uint8_t mod)
+{
+	app_hid_report.modifier |= mod;
+	g_hid.update_keys = true;
+}
+
+void
+usb_hid_reset_mod(uint8_t mod)
+{
+	app_hid_report.modifier &= ~mod;
+	g_hid.update_keys = true;
+}
+
+void
 usb_hid_collect_keys(void)
 {
 	memset(app_hid_report.keycodes, KC_NO, sizeof(app_hid_report.keycodes));
@@ -126,7 +140,7 @@ usb_hid_debug_print(void)
 		for (int i = 0; i < MAX_KEYCODES; i++) {
 			printf("%02X ", g_hid.keycodes[i]);
 		}
-		printf("\n");
+		printf("\n %02X -- ", app_hid_report.modifier);
 		for (int i = 0; i < 6; i++) {
 			printf("%02X ", app_hid_report.keycodes[i]);
 		}
