@@ -72,7 +72,7 @@ keyboard_do_key(unsigned int col, unsigned int row, bool down)
     uint16_t keycode = keymap_get_code(col, row);
 
     // We are currently only processing regular non modifier scan codes
-    if (IS_ANY(keycode)) {
+    if (IS_KEY(keycode)) {
         if (down) {
             //printf("v %04X\n", keycode);
             usb_hid_press_key(keycode);
