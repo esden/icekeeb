@@ -1,7 +1,7 @@
 /*
- * usb_hid.h
+ * keymap.h
  *
- * Copyright (C) 2021 Sylvain Munaut
+ * Copyright (C) 2021 Piotr Esden-Tempski
  * All rights reserved.
  *
  * LGPL v3+, see LICENSE.lgpl3
@@ -23,8 +23,12 @@
 
 #pragma once
 
-void usb_hid_poll(void);
-void usb_hid_init(void);
-void usb_hid_press_key(uint8_t keycode);
-void usb_hid_release_key(uint8_t keycode);
-void usb_hid_debug_print(void);
+#include <stdint.h>
+
+/* key matrix size */
+#define MATRIX_ROWS 4
+#define MATRIX_COLS 12
+
+uint16_t keymap_get_layer_code(unsigned int layer, unsigned int col, unsigned int row);
+uint16_t keymap_get_code(unsigned int col, unsigned int row);
+void keymap_init(void);

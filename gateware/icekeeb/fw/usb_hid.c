@@ -24,15 +24,21 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <no2usb/usb.h>
 #include <no2usb/usb_hw.h>
 #include <no2usb/usb_priv.h>
 #include <no2usb/usb_hid_proto.h>
 
+#include "keycode.h"
 
 extern const uint8_t app_hid_report_desc[63];
 
+/* This is the maximum amount of potential keycodes that can be pressed at the same time.
+ * We could theoretically just use ROW * COLS here...
+ */
+#define MAX_KEYCODES 48
 static struct {
 	/* Attached interface / ep */
 	uint8_t intf;
@@ -40,9 +46,15 @@ static struct {
 
 	/* State */
 	bool boot_proto;
-} g_hid;
 
-static bool usb_hid_update_keys = false;
+	/* Tracks how many scancodes are depressed right now.
+	 * This does not include modifiers.
+	 */
+	unsigned int keycount;
+	uint8_t keycodes[MAX_KEYCODES];
+	bool update_keys;
+	bool update_report;
+} g_hid;
 static struct {
 	uint8_t modifier;
 	uint8_t _res;
@@ -52,8 +64,74 @@ static struct {
 void
 usb_hid_press_key(uint8_t keycode)
 {
-	app_hid_report.keycodes[0] = keycode;
-	usb_hid_update_keys = true;
+	/* Find an empty slot and add the scancode to our main list and increment our keycount. */
+	for (int i = 0; i < MAX_KEYCODES; i++) {
+		if (g_hid.keycodes[i] == KC_NO) {
+			g_hid.keycodes[i] = keycode;
+			g_hid.keycount++;
+			break;
+		}
+	}
+	g_hid.update_keys = true;
+	g_hid.update_report = true;
+}
+
+void
+usb_hid_release_key(uint8_t keycode)
+{
+	/* Find the key in question and release it. */
+	for (int i = 0; i < MAX_KEYCODES; i++) {
+		if (g_hid.keycodes[i] == keycode) {
+			g_hid.keycodes[i] = KC_NO;
+			g_hid.keycount--;
+			break;
+		}
+	}
+	g_hid.update_keys = true;
+	g_hid.update_report = true;
+}
+
+void
+usb_hid_collect_keys(void)
+{
+	memset(app_hid_report.keycodes, KC_NO, sizeof(app_hid_report.keycodes));
+	/* Just send an empty report as we released the last key. */
+	if (g_hid.keycount == 0)
+		return;
+
+	/* We send a report full of KC_ROLL_OVER when there are more than 6 keys pressed. */
+	if (g_hid.keycount > 6) {
+		memset(app_hid_report.keycodes, KC_ROLL_OVER, sizeof(app_hid_report));
+		return;
+	}
+
+	/* Fill the report with the currently pressed keys */
+	int keys_found = 0;
+	for (int i = 0; i < MAX_KEYCODES; i++) {
+		if (g_hid.keycodes[i] != KC_NO) {
+			app_hid_report.keycodes[keys_found] = g_hid.keycodes[i];
+			keys_found++;
+			if (keys_found >= g_hid.keycount) {
+				return;
+			}
+		}
+	}
+}
+
+void
+usb_hid_debug_print(void)
+{
+	if (g_hid.update_keys || g_hid.update_report) {
+		printf("cnt %d ", g_hid.keycount);
+		for (int i = 0; i < MAX_KEYCODES; i++) {
+			printf("%02X ", g_hid.keycodes[i]);
+		}
+		printf("\n");
+		for (int i = 0; i < 6; i++) {
+			printf("%02X ", app_hid_report.keycodes[i]);
+		}
+		printf("\n");
+	}
 }
 
 static bool
@@ -200,10 +278,15 @@ usb_hid_poll(void)
 	if (g_hid.ep == 0xff)
 		return;
 
-	if (usb_hid_update_keys) {
+	if (g_hid.update_report) {
+		usb_hid_collect_keys();
+		g_hid.update_report = false;
+	}
+
+	if (g_hid.update_keys) {
 		if ((ep->bd[0].csr & USB_BD_STATE_MSK) != USB_BD_STATE_RDY_DATA) {
 			usb_data_write(ep->bd[0].ptr, &app_hid_report, 8);
-			usb_hid_update_keys = false;
+			g_hid.update_keys = false;
 			ep->bd[0].csr = USB_BD_STATE_RDY_DATA | USB_BD_LEN(8);
 		}
 	}
@@ -212,7 +295,6 @@ usb_hid_poll(void)
 void
 usb_hid_init(void)
 {
-	usb_hid_update_keys = false;
 	app_hid_report.modifier = 0x00;
 	app_hid_report._res = 0x00;
 	app_hid_report.keycodes[0] = 0x00;
@@ -224,4 +306,10 @@ usb_hid_init(void)
 	usb_register_function_driver(&_hid_drv);
 	g_hid.intf = 0xff;
 	g_hid.ep   = 0xff;
+
+	g_hid.keycount = 0;
+	g_hid.update_keys = false;
+	for (int i; i < MAX_KEYCODES; i++) {
+		g_hid.keycodes[i] = 0;
+	}
 }

@@ -40,6 +40,7 @@ SOURCES_app=\
 	usb_hid.c \
 	usb_desc_app.c \
 	keyboard.c \
+	keymap.c \
 	$(NULL)
 
 

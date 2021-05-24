@@ -89,6 +89,7 @@ help(void)
 		"  c: Connect USB\n"
 		"  d: Disconnect USB\n"
 		"  r: Read row values\n"
+		"  h: Print hid internal state\n"
 	);
 }
 
@@ -96,6 +97,7 @@ void main()
 {
 	int cmd = 0;
 	bool key_print = false;
+	bool hid_print = false;
 
 	/* Init console IO */
 	console_init();
@@ -156,6 +158,9 @@ void main()
 			case 'r':
 				key_print = !key_print;
 				break;
+			case 'h':
+				hid_print = !hid_print;
+				break;
 			default:
 				printf("Unknown command '%c'\r\n", cmd);
 				help();
@@ -163,12 +168,16 @@ void main()
 			}
 		}
 
-		if(key_print && (usb_get_tick() % 100 == 0)) {
+		if (key_print && (usb_get_tick() % 100 == 0)) {
 			keyboard_print_state();
 		}
 
 		/* Key poll */
 		keyboard_poll();
+
+		if (hid_print) {
+			usb_hid_debug_print();
+		}
 
 		/* USB poll */
 		usb_poll();

@@ -30,6 +30,9 @@
 
 #include "config.h"
 
+#include "keycode.h"
+#include "keymap.h"
+
 struct keyscan {
 	uint32_t csr;
 	uint32_t _res[3];
@@ -38,7 +41,7 @@ struct keyscan {
 
 static volatile struct keyscan * const keyscan_regs = (void*)(KEYSCAN_BASE);
 
-struct keyboard_state {
+static struct {
     uint32_t prev_rows[4];
 } keyboard_state;
 
@@ -63,22 +66,46 @@ keyboard_print_state(void)
 }
 
 void
+keyboard_do_key(unsigned int col, unsigned int row, bool down)
+{
+    uint16_t keycode = keymap_get_code(col, row);
+
+    // We are currently only processing regular non modifier scan codes
+    if (IS_ANY(keycode)) {
+        if (down) {
+            //printf("v %04X\n", keycode);
+            usb_hid_press_key(keycode);
+        } else {
+            //printf("^ %04X\n", keycode);
+            usb_hid_release_key(keycode);
+        }
+    }
+}
+
+void
 keyboard_poll(void)
 {
-    static uint32_t old = 0;
-	if(keyscan_regs->rows[1] != old) {
-		old = keyscan_regs->rows[1];
-		if((old & 0x0001) != 0) {
-			usb_hid_press_key(0x04); // A
-		} else {
-			usb_hid_press_key(0x00); // No Key
-		}
-	}
+    // get keyboard state
+    for (int i = 0; i < MATRIX_ROWS; i++) {
+        uint32_t row = keyscan_regs->rows[i];
+        uint32_t mask = keyboard_state.prev_rows[i] ^ row;
+        if (mask) {
+            uint32_t window = 1;
+            for (int j = 0; j < MATRIX_COLS; j++, window <<= 1) {
+                if (mask & window) {
+                    keyboard_do_key(j, i, (row & window) != 0);
+                }
+            }
+        }
+        keyboard_state.prev_rows[i] = row;
+    }
 }
 
 void
 keyboard_init(void)
 {
+    keymap_init();
+
     for (int i = 0; i < 4; i++) {
         keyboard_state.prev_rows[i] = 0x00000000;
     }
