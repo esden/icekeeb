@@ -26,7 +26,10 @@
 void usb_hid_poll(void);
 void usb_hid_init(void);
 void usb_hid_press_key(int col, int row, uint8_t keycode);
-void usb_hid_release_key(int col, int row, uint8_t keycode);
+void usb_hid_release_key(int col, int row);
 void usb_hid_set_mod(uint8_t keycode);
 void usb_hid_reset_mod(uint8_t keycode);
+void usb_hid_set_weak_mod(uint8_t keycode);
+void usb_hid_reset_weak_mod(uint8_t keycode);
+void usb_hid_clear_weak_mod(void);
 void usb_hid_debug_print(void);

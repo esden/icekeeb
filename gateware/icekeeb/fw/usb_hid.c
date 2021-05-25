@@ -54,6 +54,8 @@ static struct {
 	uint8_t keycodes[MATRIX_ROWS][MATRIX_COLS];
 	bool update_keys;
 	bool update_report;
+	uint8_t hard_modifier;
+	uint8_t weak_modifier;
 } g_hid;
 static struct {
 	uint8_t modifier;
@@ -72,7 +74,7 @@ usb_hid_press_key(int col, int row, uint8_t keycode)
 }
 
 void
-usb_hid_release_key(int col, int row, uint8_t keycode)
+usb_hid_release_key(int col, int row)
 {
 	g_hid.keycodes[row][col] = KC_NO;
 
@@ -83,15 +85,33 @@ usb_hid_release_key(int col, int row, uint8_t keycode)
 void
 usb_hid_set_mod(uint8_t mod)
 {
-	app_hid_report.modifier |= mod;
+	g_hid.hard_modifier |= mod;
 	g_hid.update_keys = true;
 }
 
 void
 usb_hid_reset_mod(uint8_t mod)
 {
-	app_hid_report.modifier &= ~mod;
+	g_hid.hard_modifier &= ~mod;
 	g_hid.update_keys = true;
+}
+
+void
+usb_hid_set_weak_mod(uint8_t mod)
+{
+	g_hid.weak_modifier |= mod;
+}
+
+void
+usb_hid_reset_weak_mod(uint8_t mod)
+{
+	g_hid.weak_modifier &= ~mod;
+}
+
+void
+usb_hid_clear_weak_mod(void)
+{
+	g_hid.weak_modifier = 0;
 }
 
 void
@@ -113,6 +133,9 @@ usb_hid_collect_keys(void)
 			}
 		}
 	}
+
+	app_hid_report.modifier = g_hid.hard_modifier | g_hid.weak_modifier;
+	usb_hid_clear_weak_mod();
 }
 
 void

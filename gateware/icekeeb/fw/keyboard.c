@@ -79,7 +79,7 @@ keyboard_do_key(unsigned int col, unsigned int row, bool down)
             usb_hid_press_key(col, row, keycode);
         } else {
             //printf("^ %04X\n", keycode);
-            usb_hid_release_key(col, row, keycode);
+            usb_hid_release_key(col, row);
         }
     }
 
@@ -94,11 +94,11 @@ keyboard_do_key(unsigned int col, unsigned int row, bool down)
     switch (keycode) {
         case QK_MODS...QK_MODS_MAX:
             if (down) {
-                usb_hid_set_mod(keycode >> 8);
+                usb_hid_set_weak_mod(keycode >> 8);
                 usb_hid_press_key(col, row, keycode & 0xFF);
             } else {
-                usb_hid_reset_mod(keycode >> 8);
-                usb_hid_release_key(col, row, keycode & 0xFF);
+                usb_hid_reset_weak_mod(keycode >> 8);
+                usb_hid_release_key(col, row);
             }
             break;
         case QK_TO...QK_TO_MAX:
