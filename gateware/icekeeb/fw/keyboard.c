@@ -70,15 +70,16 @@ void
 keyboard_do_key(unsigned int col, unsigned int row, bool down)
 {
     uint16_t keycode = keymap_get_code(col, row);
+    //printf("do c%d r%d %c kc%02X\n", col, row, down?'v':'^', keycode);
 
     // We are currently only processing regular non modifier scan codes
     if (IS_KEY(keycode)) {
         if (down) {
             //printf("v %04X\n", keycode);
-            usb_hid_press_key(keycode);
+            usb_hid_press_key(col, row, keycode);
         } else {
             //printf("^ %04X\n", keycode);
-            usb_hid_release_key(keycode);
+            usb_hid_release_key(col, row, keycode);
         }
     }
 
@@ -94,10 +95,10 @@ keyboard_do_key(unsigned int col, unsigned int row, bool down)
         case QK_MODS...QK_MODS_MAX:
             if (down) {
                 usb_hid_set_mod(keycode >> 8);
-                usb_hid_press_key(keycode & 0xFF);
+                usb_hid_press_key(col, row, keycode & 0xFF);
             } else {
                 usb_hid_reset_mod(keycode >> 8);
-                usb_hid_release_key(keycode & 0xFF);
+                usb_hid_release_key(col, row, keycode & 0xFF);
             }
             break;
         case QK_TO...QK_TO_MAX:

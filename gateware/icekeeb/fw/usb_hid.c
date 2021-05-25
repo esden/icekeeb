@@ -32,6 +32,7 @@
 #include <no2usb/usb_hid_proto.h>
 
 #include "keycode.h"
+#include "keymap.h"
 
 extern const uint8_t app_hid_report_desc[63];
 
@@ -47,11 +48,10 @@ static struct {
 	/* State */
 	bool boot_proto;
 
-	/* Tracks how many scancodes are depressed right now.
-	 * This does not include modifiers.
+	/* Tracks the keys based on which matrix key generated them
+	 * This way we prevent setting/releasing a keys across layers.
 	 */
-	unsigned int keycount;
-	uint8_t keycodes[MAX_KEYCODES];
+	uint8_t keycodes[MATRIX_ROWS][MATRIX_COLS];
 	bool update_keys;
 	bool update_report;
 } g_hid;
@@ -62,31 +62,20 @@ static struct {
 } __attribute__ ((packed,aligned(4))) app_hid_report;
 
 void
-usb_hid_press_key(uint8_t keycode)
+usb_hid_press_key(int col, int row, uint8_t keycode)
 {
 	/* Find an empty slot and add the scancode to our main list and increment our keycount. */
-	for (int i = 0; i < MAX_KEYCODES; i++) {
-		if (g_hid.keycodes[i] == KC_NO) {
-			g_hid.keycodes[i] = keycode;
-			g_hid.keycount++;
-			break;
-		}
-	}
+	g_hid.keycodes[row][col] = keycode;
+
 	g_hid.update_keys = true;
 	g_hid.update_report = true;
 }
 
 void
-usb_hid_release_key(uint8_t keycode)
+usb_hid_release_key(int col, int row, uint8_t keycode)
 {
-	/* Find the key in question and release it. */
-	for (int i = 0; i < MAX_KEYCODES; i++) {
-		if (g_hid.keycodes[i] == keycode) {
-			g_hid.keycodes[i] = KC_NO;
-			g_hid.keycount--;
-			break;
-		}
-	}
+	g_hid.keycodes[row][col] = KC_NO;
+
 	g_hid.update_keys = true;
 	g_hid.update_report = true;
 }
@@ -109,24 +98,18 @@ void
 usb_hid_collect_keys(void)
 {
 	memset(app_hid_report.keycodes, KC_NO, sizeof(app_hid_report.keycodes));
-	/* Just send an empty report as we released the last key. */
-	if (g_hid.keycount == 0)
-		return;
-
-	/* We send a report full of KC_ROLL_OVER when there are more than 6 keys pressed. */
-	if (g_hid.keycount > 6) {
-		memset(app_hid_report.keycodes, KC_ROLL_OVER, sizeof(app_hid_report));
-		return;
-	}
 
 	/* Fill the report with the currently pressed keys */
 	int keys_found = 0;
-	for (int i = 0; i < MAX_KEYCODES; i++) {
-		if (g_hid.keycodes[i] != KC_NO) {
-			app_hid_report.keycodes[keys_found] = g_hid.keycodes[i];
-			keys_found++;
-			if (keys_found >= g_hid.keycount) {
-				return;
+	for (int r = 0; r < MATRIX_ROWS; r++) {
+		for (int c = 0; c < MATRIX_COLS; c++) {
+			if (g_hid.keycodes[r][c] != KC_NO) {
+				app_hid_report.keycodes[keys_found] = g_hid.keycodes[r][c];
+				keys_found++;
+				if (keys_found > 6) {
+					memset(app_hid_report.keycodes, KC_ROLL_OVER, sizeof(app_hid_report));
+					return;
+				}
 			}
 		}
 	}
@@ -136,9 +119,11 @@ void
 usb_hid_debug_print(void)
 {
 	if (g_hid.update_keys || g_hid.update_report) {
-		printf("cnt %d ", g_hid.keycount);
-		for (int i = 0; i < MAX_KEYCODES; i++) {
-			printf("%02X ", g_hid.keycodes[i]);
+		for (int r = 0; r < MATRIX_ROWS; r++) {
+			for (int c = 0; c < MATRIX_COLS; c++) {
+				printf("%02X ", g_hid.keycodes[r][c]);
+			}
+			printf("\n");
 		}
 		printf("\n %02X -- ", app_hid_report.modifier);
 		for (int i = 0; i < 6; i++) {
@@ -321,9 +306,6 @@ usb_hid_init(void)
 	g_hid.intf = 0xff;
 	g_hid.ep   = 0xff;
 
-	g_hid.keycount = 0;
 	g_hid.update_keys = false;
-	for (int i; i < MAX_KEYCODES; i++) {
-		g_hid.keycodes[i] = 0;
-	}
+	memset(g_hid.keycodes, 0, sizeof(g_hid.keycodes));
 }
