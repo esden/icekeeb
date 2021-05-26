@@ -129,7 +129,7 @@ usb_hid_collect_keys(void)
 				app_hid_report.keycodes[keys_found] = g_hid.keycodes[r][c];
 				keys_found++;
 				if (keys_found > 6) {
-					memset(app_hid_report.keycodes, KC_ROLL_OVER, sizeof(app_hid_report));
+					memset(app_hid_report.keycodes, KC_ROLL_OVER, sizeof(app_hid_report.keycodes));
 					return;
 				}
 			}
