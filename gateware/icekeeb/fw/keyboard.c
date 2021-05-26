@@ -72,7 +72,7 @@ keyboard_do_key(unsigned int col, unsigned int row, bool down)
     uint16_t keycode = keymap_get_code(col, row);
     //printf("do c%d r%d %c kc%02X\n", col, row, down?'v':'^', keycode);
 
-    // We are currently only processing regular non modifier scan codes
+    // Handle regular keycodes
     if (IS_KEY(keycode)) {
         if (down) {
             //printf("v %04X\n", keycode);

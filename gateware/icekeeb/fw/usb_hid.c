@@ -87,6 +87,7 @@ usb_hid_set_mod(uint8_t mod)
 {
 	g_hid.hard_modifier |= mod;
 	g_hid.update_keys = true;
+	g_hid.update_report = true;
 }
 
 void
@@ -94,6 +95,7 @@ usb_hid_reset_mod(uint8_t mod)
 {
 	g_hid.hard_modifier &= ~mod;
 	g_hid.update_keys = true;
+	g_hid.update_report = true;
 }
 
 void
