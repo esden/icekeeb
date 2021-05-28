@@ -31,3 +31,14 @@ How to build and program
 
 To build and flash the gateware and firmware on an iCEBreaker-bitsy follow the instructions in [iCEKeeb README](gateware/icekeeb/README.md).
 
+
+License
+=======
+
+Gateware is mostly under "CERN Open Hardware license v2 Permissive", but some of the cores are under other permissive licenses. Each file has the license specified in its header.
+
+Firmware is mostly under LGPL3+, against some files imported from other places are under more permissive licenses. Each file has the license specified in its header.
+
+Some other files/cores imported through submodules might differ from the above but they are not used / don't end up in the final build, that's just the nature of submodules.
+
+In case of submodules, always refer to the README/LICENSE of the submodule itself for more details.
