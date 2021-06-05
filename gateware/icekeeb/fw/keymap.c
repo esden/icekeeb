@@ -57,11 +57,11 @@ const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 	[1] = LAYOUT(KC_EXLM, KC_AT,   KC_UP,   KC_DLR,  KC_PERC,                   KC_PGUP, KC_7,    KC_8,    KC_9,    KC_BSPC,
                  KC_LPRN, KC_LEFT, KC_DOWN, KC_RGHT, KC_RPRN,                   KC_PGDN, KC_4,    KC_5,    KC_6,    KC_BSLS,
                  KC_LBRC, KC_RBRC, KC_HASH, KC_LCBR, KC_RCBR, KC_INS,  KC_AMPR, KC_ASTR, KC_1,    KC_2,    KC_3,    KC_PLUS,
-                 TG(2),   KC_CIRC, KC_LCTL, KC_LSFT, KC_BSPC, KC_LGUI, KC_LALT, KC_SPC,  KC_TRNS, KC_DOT,  KC_0,    KC_EQL),
+                 TG(2),   KC_CIRC, KC_LCTL, KC_LSFT, KC_DEL,  KC_LGUI, KC_LALT, KC_SPC,  KC_TRNS, KC_DOT,  KC_0,    KC_EQL),
 	[2] = LAYOUT(KC_INS,  KC_HOME, KC_UP,   KC_END,  KC_PGUP,                   KC_UP,   KC_F7,   KC_F8,   KC_F9,   KC_F10,
                  KC_DEL,  KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN,                   KC_DOWN, KC_F4,   KC_F5,   KC_F6,   KC_F11,
                  KC_NO,   KC_VOLU, KC_NO,   KC_NO,   RESET,   KC_TRNS, KC_TRNS, KC_NO,   KC_F1,   KC_F2,   KC_F3,   KC_F12,
-                 KC_TRNS, KC_VOLD, KC_LCTL, KC_LSFT, KC_BSPC, KC_LGUI, KC_LALT, KC_SPC,  TO(0),   KC_PSCR, KC_SLCK, KC_PAUS)
+                 KC_TRNS, KC_VOLD, KC_LCTL, KC_LSFT, KC_DEL,  KC_LGUI, KC_LALT, KC_SPC,  TO(0),   KC_PSCR, KC_SLCK, KC_PAUS)
 };
 
 static struct {
