@@ -38,6 +38,7 @@ module keyscan (
 	// CSR
 	reg [31:0] ks_csr;
 	reg [11:0] ks_row [0:3];
+	reg [4:0] ks_cnt [0:11][0:3];
 
 
 	// Wishbone interface
@@ -81,7 +82,7 @@ module keyscan (
 	end
 
 	// Keyscanner
-	reg [14:0] ks_div;
+	reg [13:0] ks_div;
 
 	always @(posedge clk) begin
 		if (rst)
@@ -91,6 +92,39 @@ module keyscan (
 			ks_div <= (ks_div + 1) & {($left(ks_div)+1){~ks_div[$left(ks_div)]}};
 	end
 
+	// Note:
+	// Adding debounce counters in this way to an Atreus (12x4 key matrix)
+	// uses 80 additional LUTs. It would be possible to implemet with BRAM
+	// using multiple cycles per row. But it is more implementation effort
+	// and it does not seem like a reasonable tradeoff at this point.
+
+	// Debounce counters
+	// This implements depress and release hysteresis debounce.
+	genvar i;
+	generate
+		for (i = 0; i < 12; i = i + 1) begin
+			always @(posedge clk) begin
+				if (rst) begin
+					ks_cnt[i][0] <= 0;
+					ks_cnt[i][1] <= 0;
+					ks_cnt[i][2] <= 0;
+					ks_cnt[i][3] <= 0;
+				end else if (ks_div[$left(ks_div)]) begin
+					if (ks_cnt[i][ks_row_cnt][4] == 0)
+						if (km_col[i] == 1) // Be aware key pulls down
+							ks_cnt[i][ks_row_cnt] <= 0;
+						else
+							ks_cnt[i][ks_row_cnt] <= ks_cnt[i][ks_row_cnt] + 1;
+					else
+						if (km_col[i] == 1) // Be aware key pulls down
+							ks_cnt[i][ks_row_cnt] <= ks_cnt[i][ks_row_cnt] - 1;
+						else
+							ks_cnt[i][ks_row_cnt] <= 5'b11111;
+				end
+			end
+		end
+	endgenerate
+
 	reg [1:0] ks_row_cnt;
 	always @(posedge clk) begin
 		if (rst) begin
@@ -98,8 +132,22 @@ module keyscan (
 			ks_row[1] <= 0;
 			ks_row[2] <= 0;
 			ks_row[3] <= 0;
-		end else if (ks_div[14]) begin
-			ks_row[ks_row_cnt] <= ~km_col;
+		end else if (ks_div[$left(ks_div)]) begin
+			ks_row[ks_row_cnt] <= {
+				ks_cnt[11][ks_row_cnt][4],
+				ks_cnt[10][ks_row_cnt][4],
+				ks_cnt[9][ks_row_cnt][4],
+				ks_cnt[8][ks_row_cnt][4],
+				ks_cnt[7][ks_row_cnt][4],
+				ks_cnt[6][ks_row_cnt][4],
+				ks_cnt[5][ks_row_cnt][4],
+				ks_cnt[4][ks_row_cnt][4],
+				ks_cnt[3][ks_row_cnt][4],
+				ks_cnt[2][ks_row_cnt][4],
+				ks_cnt[1][ks_row_cnt][4],
+				ks_cnt[0][ks_row_cnt][4]
+				};
+			//ks_row[ks_row_cnt] <= ~km_col;
 			ks_row_cnt <= ks_row_cnt + 1;
 		end
 	end
