@@ -110,16 +110,13 @@ module keyscan (
 					ks_cnt[i][2] <= 0;
 					ks_cnt[i][3] <= 0;
 				end else if (ks_div[$left(ks_div)]) begin
-					if (ks_cnt[i][ks_row_cnt][4] == 0)
-						if (km_col[i] == 1) // Be aware key pulls down
+					if (km_col[i] == 1) // Be aware key pulls down
+						if (ks_cnt[i][ks_row_cnt][4] == 0)
 							ks_cnt[i][ks_row_cnt] <= 0;
 						else
-							ks_cnt[i][ks_row_cnt] <= ks_cnt[i][ks_row_cnt] + 1;
-					else
-						if (km_col[i] == 1) // Be aware key pulls down
 							ks_cnt[i][ks_row_cnt] <= ks_cnt[i][ks_row_cnt] - 1;
-						else
-							ks_cnt[i][ks_row_cnt] <= 5'b11111;
+					else
+						ks_cnt[i][ks_row_cnt] <= 5'b11111;
 				end
 			end
 		end
