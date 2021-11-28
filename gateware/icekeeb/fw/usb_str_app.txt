@@ -1,6 +1,6 @@
 0000000000000000
 1BitSquared
-icekeeb
+iCEKeeb
 Main
 Keyboard
 Console (control)
