@@ -94,9 +94,10 @@ module keyscan (
 
 	// Note:
 	// Adding debounce counters in this way to an Atreus (12x4 key matrix)
-	// uses 80 additional LUTs. It would be possible to implemet with BRAM
-	// using multiple cycles per row. But it is more implementation effort
-	// and it does not seem like a reasonable tradeoff at this point.
+	// uses 435 (9% on iCE40up5k) additional LUTs. It would be possible to
+	// implemet with BRAM using multiple cycles per row. But it is more
+	// implementation effort and it does not seem like a reasonable tradeoff
+	// at this point.
 
 	// Debounce counters
 	// This implements depress and release hysteresis debounce.
