@@ -11,8 +11,8 @@
 
 module keyscan (
 	// KeyMatrix
-	input wire [11:0] km_col,
-	output wire [3:0] km_row,
+	input  wire [11:0] km_col,
+	output reg   [3:0] km_row,
 
 	// Wishbone slave
 	input  wire [ 2:0] wb_addr,
@@ -83,74 +83,70 @@ module keyscan (
 
 	// Keyscanner
 	reg [13:0] ks_div;
+	wire       ks_div_stb;
 
 	always @(posedge clk) begin
 		if (rst)
 			ks_div <= 0;
 		else
 			// increment ks_div, if the HSB of ks_div is 0, otherwise reset to 0
-			ks_div <= (ks_div + 1) & {($left(ks_div)+1){~ks_div[$left(ks_div)]}};
+			ks_div <= (ks_div + 1) & {($left(ks_div)+1){~ks_div_stb}};
 	end
+
+	assign ks_div_stb = ks_div[$left(ks_div)];
+
+	// Row select
+	always @(posedge clk or posedge rst)
+		if (rst)
+			km_row <= 4'b1110;
+		else if (ks_div_stb)
+			km_row <= { km_row[2:0], km_row[3] };
 
 	// Note:
 	// Adding debounce counters in this way to an Atreus (12x4 key matrix)
-	// uses 435 (9% on iCE40up5k) additional LUTs. It would be possible to
-	// implemet with BRAM using multiple cycles per row. But it is more
+	// uses ~192 (3.5% on iCE40up5k) additional LCs. It would be possible to
+	// implement with BRAM using multiple cycles per row. But it is more
 	// implementation effort and it does not seem like a reasonable tradeoff
 	// at this point.
 
 	// Debounce counters
 	// This implements depress and release hysteresis debounce.
-	genvar i;
+	wire [3:0] ks_cnt_ce;
+
+	genvar j, i;
 	generate
-		for (i = 0; i < 12; i = i + 1) begin
-			always @(posedge clk) begin
-				if (rst) begin
-					ks_cnt[i][0] <= 0;
-					ks_cnt[i][1] <= 0;
-					ks_cnt[i][2] <= 0;
-					ks_cnt[i][3] <= 0;
-				end else if (ks_div[$left(ks_div)]) begin
-					if (km_col[i] == 1) // Be aware key pulls down
-						if (ks_cnt[i][ks_row_cnt][4] == 0)
-							ks_cnt[i][ks_row_cnt] <= 0;
+		for (j = 0; j <  4; j = j + 1)
+		begin
+			// Clock Enable
+			assign ks_cnt_ce[j] = ks_div_stb & ~km_row[j];
+
+			// Counters
+			for (i = 0; i < 12; i = i + 1)
+			begin
+				// Update
+				always @(posedge clk or posedge rst)
+				begin
+					if (rst) begin
+						ks_cnt[i][j] <= 0;
+					end else if (ks_cnt_ce[j]) begin
+						// Tiny bit smaller but way less readable ...
+						// ks_cnt[i][j] <= ((ks_cnt[i][j] + {5{ks_cnt[i][j][4]}}) & {5{ks_cnt[i][j][4]}}) | {5{~km_col[i]}};
+
+						if (km_col[i] == 1) // Be aware key pulls down
+							if (ks_cnt[i][j][4] == 0)
+								ks_cnt[i][j] <= 0;
+							else
+								ks_cnt[i][j] <= ks_cnt[i][j] + {5{ks_cnt[i][j][4]}};
 						else
-							ks_cnt[i][ks_row_cnt] <= ks_cnt[i][ks_row_cnt] - 1;
-					else
-						ks_cnt[i][ks_row_cnt] <= 5'b11111;
+							ks_cnt[i][j] <= 5'b11111;
+					end
 				end
+
+				// Mapping result
+				always @(*)
+					ks_row[j][i] = ks_cnt[i][j][4];
 			end
 		end
 	endgenerate
-
-	reg [1:0] ks_row_cnt;
-	always @(posedge clk) begin
-		if (rst) begin
-			ks_row[0] <= 0;
-			ks_row[1] <= 0;
-			ks_row[2] <= 0;
-			ks_row[3] <= 0;
-		end else if (ks_div[$left(ks_div)]) begin
-			ks_row[ks_row_cnt] <= {
-				ks_cnt[11][ks_row_cnt][4],
-				ks_cnt[10][ks_row_cnt][4],
-				ks_cnt[9][ks_row_cnt][4],
-				ks_cnt[8][ks_row_cnt][4],
-				ks_cnt[7][ks_row_cnt][4],
-				ks_cnt[6][ks_row_cnt][4],
-				ks_cnt[5][ks_row_cnt][4],
-				ks_cnt[4][ks_row_cnt][4],
-				ks_cnt[3][ks_row_cnt][4],
-				ks_cnt[2][ks_row_cnt][4],
-				ks_cnt[1][ks_row_cnt][4],
-				ks_cnt[0][ks_row_cnt][4]
-				};
-			//ks_row[ks_row_cnt] <= ~km_col;
-			ks_row_cnt <= ks_row_cnt + 1;
-		end
-	end
-
-	assign km_row = ~(4'b0001 << ks_row_cnt);
-
 
 endmodule // keyscan
